@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER OMIKUJI 2077</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Orbitron', 'Noto Sans JP', sans-serif;
+            background: #0a0a0f;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Cyberpunk grid background */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+        }
+
+        /* Scanlines effect */
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            position: relative;
+            animation: glitch 3s infinite;
+            text-shadow:
+                0 0 10px #0ff,
+                0 0 20px #0ff,
+                0 0 40px #0ff,
+                0 0 80px #00ffff;
+        }
+
+        h1 span {
+            color: #ff00ff;
+            text-shadow:
+                0 0 10px #f0f,
+                0 0 20px #f0f,
+                0 0 40px #ff00ff;
+        }
+
+        .subtitle {
+            color: #00ff00;
+            font-size: 1rem;
+            letter-spacing: 8px;
+            margin-bottom: 50px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% {
+                transform: translate(0);
+                text-shadow:
+                    0 0 10px #0ff,
+                    0 0 20px #0ff,
+                    0 0 40px #0ff;
+            }
+            92% {
+                transform: translate(-2px, 2px);
+                text-shadow:
+                    2px 0 #f0f,
+                    -2px 0 #0ff;
+            }
+            94% {
+                transform: translate(2px, -2px);
+                text-shadow:
+                    -2px 0 #f0f,
+                    2px 0 #0ff;
+            }
+            96% {
+                transform: translate(-2px, -2px);
+                text-shadow:
+                    2px 0 #0ff,
+                    -2px 0 #f0f;
+            }
+            98% {
+                transform: translate(2px, 2px);
+                text-shadow:
+                    -2px 0 #0ff,
+                    2px 0 #f0f;
+            }
+        }
+
+        .omikuji-box {
+            width: 200px;
+            height: 300px;
+            margin: 0 auto 50px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .omikuji-box:hover {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+        }
+
+        .cyber-tube {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg,
+                #1a1a2e 0%,
+                #16213e 50%,
+                #0f0f23 100%
+            );
+            border: 3px solid #00ffff;
+            border-radius: 10px;
+            position: relative;
+            box-shadow:
+                0 0 20px rgba(0, 255, 255, 0.5),
+                inset 0 0 30px rgba(0, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .cyber-tube::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 40%,
+                rgba(0, 255, 255, 0.1) 50%,
+                transparent 60%
+            );
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        .tube-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff00ff;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow:
+                0 0 10px #ff00ff,
+                0 0 20px #ff00ff;
+            z-index: 2;
+        }
+
+        .tube-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(0, 255, 255, 0.1) 10px,
+                    rgba(0, 255, 255, 0.1) 12px
+                );
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) rotate(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px) rotate(-2deg); }
+            20%, 40%, 60%, 80% { transform: translateX(10px) rotate(2deg); }
+        }
+
+        .result {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .result.show {
+            display: block;
+            opacity: 1;
+        }
+
+        .fortune-display {
+            background: rgba(10, 10, 15, 0.9);
+            border: 2px solid #ff00ff;
+            border-radius: 15px;
+            padding: 30px 50px;
+            margin-bottom: 30px;
+            box-shadow:
+                0 0 30px rgba(255, 0, 255, 0.5),
+                inset 0 0 30px rgba(255, 0, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fortune-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00ffff, #ff00ff, #ffff00, #00ffff);
+            background-size: 300% 100%;
+            animation: borderGlow 3s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+
+        .fortune-level {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            animation: resultAppear 0.5s ease-out;
+        }
+
+        @keyframes resultAppear {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .fortune-daikichi { color: #ffff00; text-shadow: 0 0 30px #ffff00, 0 0 60px #ffff00; }
+        .fortune-kichi { color: #00ff00; text-shadow: 0 0 30px #00ff00, 0 0 60px #00ff00; }
+        .fortune-chukichi { color: #00ffff; text-shadow: 0 0 30px #00ffff, 0 0 60px #00ffff; }
+        .fortune-shokichi { color: #ff00ff; text-shadow: 0 0 30px #ff00ff, 0 0 60px #ff00ff; }
+        .fortune-suekichi { color: #ff8800; text-shadow: 0 0 30px #ff8800, 0 0 60px #ff8800; }
+        .fortune-kyo { color: #ff0044; text-shadow: 0 0 30px #ff0044, 0 0 60px #ff0044; }
+
+        .fortune-detail {
+            color: #a0a0a0;
+            font-size: 1.2rem;
+            line-height: 1.8;
+        }
+
+        .lucky-items {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .lucky-item {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #00ffff;
+            border-radius: 10px;
+            padding: 15px 25px;
+            color: #00ffff;
+        }
+
+        .lucky-item span {
+            display: block;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .lucky-item strong {
+            font-size: 1.3rem;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .draw-button {
+            background: linear-gradient(135deg, #ff00ff, #00ffff);
+            border: none;
+            color: #0a0a0f;
+            padding: 15px 50px;
+            font-size: 1.2rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .draw-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .draw-button:hover::before {
+            left: 100%;
+        }
+
+        .draw-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.8);
+        }
+
+        .draw-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .decoration {
+            position: fixed;
+            font-size: 0.8rem;
+            color: rgba(0, 255, 255, 0.3);
+            font-family: 'Orbitron', monospace;
+            pointer-events: none;
+        }
+
+        .deco-1 { top: 20px; left: 20px; }
+        .deco-2 { top: 20px; right: 20px; text-align: right; }
+        .deco-3 { bottom: 20px; left: 20px; }
+        .deco-4 { bottom: 20px; right: 20px; text-align: right; }
+
+        .barcode {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 2px;
+            opacity: 0.5;
+        }
+
+        .barcode span {
+            width: 3px;
+            background: #00ffff;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .fortune-level { font-size: 2.5rem; }
+            .lucky-items { gap: 15px; }
+            .fortune-display { padding: 20px; }
+            .decoration { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="decoration deco-1">
+        SYSTEM: ONLINE<br>
+        NODE: TOKYO-77<br>
+        TIME: <span id="currentTime"></span>
+    </div>
+    <div class="decoration deco-2">
+        STATUS: READY<br>
+        MODE: FORTUNE<br>
+        VER: 2.0.77
+    </div>
+    <div class="decoration deco-3">
+        COORD: 35.6762°N<br>
+        139.6503°E
+    </div>
+    <div class="decoration deco-4">
+        CONNECTION: SECURE<br>
+        ENCRYPTION: QUANTUM
+    </div>
+
+    <div class="container">
+        <h1>CYBER <span>OMIKUJI</span></h1>
+        <p class="subtitle">NEURO FORTUNE SYSTEM</p>
+
+        <div class="omikuji-box" id="omikujiBox" onclick="drawFortune()">
+            <div class="cyber-tube">
+                <div class="tube-lines"></div>
+                <div class="tube-label">運</div>
+            </div>
+        </div>
+
+        <button class="draw-button" id="drawBtn" onclick="drawFortune()">おみくじを引く</button>
+
+        <div class="result" id="result">
+            <div class="fortune-display">
+                <div class="fortune-level" id="fortuneLevel"></div>
+                <div class="fortune-detail" id="fortuneDetail"></div>
+                <div class="lucky-items">
+                    <div class="lucky-item">
+                        <span>LUCKY COLOR</span>
+                        <strong id="luckyColor"></strong>
+                    </div>
+                    <div class="lucky-item">
+                        <span>LUCKY NUMBER</span>
+                        <strong id="luckyNumber"></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="barcode">
+        <span style="height: 20px;"></span>
+        <span style="height: 15px;"></span>
+        <span style="height: 25px;"></span>
+        <span style="height: 10px;"></span>
+        <span style="height: 20px;"></span>
+        <span style="height: 30px;"></span>
+        <span style="height: 15px;"></span>
+        <span style="height: 20px;"></span>
+        <span style="height: 10px;"></span>
+        <span style="height: 25px;"></span>
+        <span style="height: 15px;"></span>
+        <span style="height: 20px;"></span>
+        <span style="height: 30px;"></span>
+        <span style="height: 10px;"></span>
+        <span style="height: 20px;"></span>
+    </div>
+
+    <script>
+        const fortunes = [
+            {
+                level: '大吉',
+                class: 'fortune-daikichi',
+                detail: '最高の運気です。Neural Linkの接続が最適化されています。',
+                color: 'ネオンイエロー',
+                number: 77
+            },
+            {
+                level: '吉',
+                class: 'fortune-kichi',
+                detail: '良い運気が訪れます。サイバー空間でのフローが期待できます。',
+                color: 'マトリックスグリーン',
+                number: 7
+            },
+            {
+                level: '中吉',
+                class: 'fortune-chukichi',
+                detail: 'まずまずの運気。安定したネットワーク接続。',
+                color: 'エレクトリックブルー',
+                number: 42
+            },
+            {
+                level: '小吉',
+                class: 'fortune-shokichi',
+                detail: '小さな幸運があります。バグ修正のチャンス到来。',
+                color: 'サイバーパープル',
+                number: 13
+            },
+            {
+                level: '末吉',
+                class: 'fortune-suekichi',
+                detail: '運気は上昇中。焦らず待つことが重要です。',
+                color: 'オレンジグロー',
+                number: 21
+            },
+            {
+                level: '凶',
+                class: 'fortune-kyo',
+                detail: '注意が必要。システムバックアップを忘れずに。',
+                color: 'クリムゾンレッド',
+                number: 0
+            }
+        ];
+
+        let hasDrawn = false;
+
+        function drawFortune() {
+            if (hasDrawn) return;
+
+            const box = document.getElementById('omikujiBox');
+            box.classList.add('shake');
+
+            setTimeout(() => {
+                box.classList.remove('shake');
+                const randomIndex = Math.floor(Math.random() * fortunes.length);
+                const fortune = fortunes[randomIndex];
+
+                document.getElementById('fortuneLevel').textContent = fortune.level;
+                document.getElementById('fortuneLevel').className = 'fortune-level ' + fortune.class;
+                document.getElementById('fortuneDetail').textContent = fortune.detail;
+                document.getElementById('luckyColor').textContent = fortune.color;
+                document.getElementById('luckyNumber').textContent = fortune.number;
+
+                const result = document.getElementById('result');
+                result.classList.add('show');
+
+                document.getElementById('drawBtn').disabled = true;
+                document.getElementById('drawBtn').textContent = 'SYSTEM PROCESSING COMPLETE';
+
+                hasDrawn = true;
+            }, 500);
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('ja-JP', { hour12: false });
+            document.getElementById('currentTime').textContent = timeStr;
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+</html>
