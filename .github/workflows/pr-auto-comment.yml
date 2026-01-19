@@ -5,7 +5,11 @@ on:
     types: [opened]
 
 permissions:
+  contents: read
   pull-requests: write
+
+env:
+  ENABLE_PR_AUTO_COMMENT: ${{ vars.ENABLE_PR_AUTO_COMMENT || 'true' }}
 
 jobs:
   auto-comment:
@@ -16,9 +20,14 @@ jobs:
         with:
           github-token: ${{ secrets.GH_PAT_ONIZUKA }}
           script: |
+            if ('${{ env.ENABLE_PR_AUTO_COMMENT }}' !== 'true') {
+              console.log('PR Auto Comment is disabled. Skipping...');
+              return;
+            }
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: '@claude レビューと修正をお願いします。'
-            })
+            });
