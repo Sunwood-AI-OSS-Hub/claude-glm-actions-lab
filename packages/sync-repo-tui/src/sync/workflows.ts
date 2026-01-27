@@ -56,7 +56,9 @@ export async function syncWorkflows(
 
     // ターゲットのワークフローディレクトリを作成
     const targetWorkflowDir = path.join(targetDir, '.github', 'workflows');
-    await directoryExists(targetWorkflowDir) || require('fs').mkdirSync(targetWorkflowDir, { recursive: true });
+    if (!directoryExists(targetWorkflowDir)) {
+      require('fs').mkdirSync(targetWorkflowDir, { recursive: true });
+    }
 
     // ワークフローファイルをコピー
     for (const file of workflowFiles) {

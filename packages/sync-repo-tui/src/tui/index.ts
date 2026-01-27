@@ -42,6 +42,13 @@ export async function runTUI(options: TUIOptions): Promise<void> {
       if (shouldCreate) {
         const envExample = path.join(projectRoot, '.env.example');
         const envPath = path.join(projectRoot, '.env');
+
+        // .env.example の存在確認
+        if (!fs.existsSync(envExample)) {
+          terminal.red('エラー: .env.example が見つかりません\n');
+          process.exit(1);
+        }
+
         fs.copyFileSync(envExample, envPath);
         terminal.green('.env を作成しました\n');
         terminal('編集してから再実行してください\n');
@@ -226,6 +233,7 @@ export async function runTUI(options: TUIOptions): Promise<void> {
     process.exit(1);
   } finally {
     terminal.grabInput(false);
-    process.exit(0);
   }
+
+  process.exit(0);
 }

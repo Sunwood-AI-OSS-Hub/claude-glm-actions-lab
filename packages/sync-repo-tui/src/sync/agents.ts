@@ -61,11 +61,11 @@ export async function syncAgents(
     for (const file of agentFiles) {
       const relPath = path.relative(agentsSource, file);
       const targetFile = path.join(targetAgentsDir, relPath);
-      const targetDir = path.dirname(targetFile);
+      const fileDir = path.dirname(targetFile);
 
       // ディレクトリを作成
-      if (!fs.existsSync(targetDir)) {
-        fs.mkdirSync(targetDir, { recursive: true });
+      if (!fs.existsSync(fileDir)) {
+        fs.mkdirSync(fileDir, { recursive: true });
       }
 
       copyFile(file, targetFile);
