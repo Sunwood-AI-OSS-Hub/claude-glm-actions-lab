@@ -1,6 +1,6 @@
 #!/bin/bash
-# GitHub Workflows 同期スクリプト
-# このリポジトリのワークフローファイルをターゲットリポジトリに同期
+# GitHub Agents 同期スクリプト
+# このリポジトリのエージェントファイルをターゲットリポジトリに同期
 
 set -e
 
@@ -28,29 +28,30 @@ fi
 
 # ターゲットリポジトリのチェック
 TARGET_REPO="${TARGET_REPO:-Sunwood-ai-labs/claude-glm-actions-lab-sandbox}"
-WORKFLOW_SOURCE="$PROJECT_ROOT/.github/workflows"
+AGENTS_SOURCE="$PROJECT_ROOT/.claude/agents"
 
-echo -e "${GREEN}=== GitHub Workflows 同期 ===${NC}"
+echo -e "${GREEN}=== GitHub Agents 同期 ===${NC}"
 echo "ターゲットリポジトリ: $TARGET_REPO"
-echo "ソースディレクトリ: $WORKFLOW_SOURCE"
+echo "ソースディレクトリ: $AGENTS_SOURCE"
 echo ""
 
 # ソースディレクトリのチェック
-if [ ! -d "$WORKFLOW_SOURCE" ]; then
-    echo -e "${RED}エラー: ワークフローソースディレクトリが見つかりません: $WORKFLOW_SOURCE${NC}"
+if [ ! -d "$AGENTS_SOURCE" ]; then
+    echo -e "${RED}エラー: エージェントソースディレクトリが見つかりません: $AGENTS_SOURCE${NC}"
     exit 1
 fi
 
-# ワークフローファイルの確認（disabled フォルダを除外）
-WORKFLOW_FILES=$(find "$WORKFLOW_SOURCE" -path "*/disabled/*" -prune -o -name "*.yml" -print -o -name "*.yaml" -print 2>/dev/null || true)
-if [ -z "$WORKFLOW_FILES" ]; then
-    echo -e "${YELLOW}警告: ワークフローファイルが見つかりません${NC}"
+# エージェントファイルの確認
+AGENT_FILES=$(find "$AGENTS_SOURCE" -type f \( -name "*.md" -o -name "*.json" -o -name "*.yml" -o -name "*.yaml" \) 2>/dev/null || true)
+if [ -z "$AGENT_FILES" ]; then
+    echo -e "${YELLOW}警告: エージェントファイルが見つかりません${NC}"
     exit 0
 fi
 
-echo "同期するワークフローファイル:"
-echo "$WORKFLOW_FILES" | while read -r file; do
-    echo "  - $(basename "$file")"
+echo "同期するエージェントファイル:"
+echo "$AGENT_FILES" | while read -r file; do
+    rel_path="${file#$AGENTS_SOURCE/}"
+    echo "  - $rel_path"
 done
 echo ""
 
@@ -80,18 +81,21 @@ if [ ! -d "$TARGET_DIR" ]; then
     exit 1
 fi
 
-# ターゲットのワークフローディレクトリを作成
-TARGET_WORKFLOW_DIR="$TARGET_DIR/.github/workflows"
-mkdir -p "$TARGET_WORKFLOW_DIR"
+# ターゲットのエージェントディレクトリを作成
+TARGET_AGENTS_DIR="$TARGET_DIR/.claude/agents"
+mkdir -p "$TARGET_AGENTS_DIR"
 
-# ワークフローファイルをコピー（追加・上書きのみ）
+# エージェントファイルをコピー（追加・上書きのみ、ディレクトリ構造を維持）
 echo ""
-echo "ワークフローファイルをコピー中..."
+echo "エージェントファイルをコピー中..."
 
-echo "$WORKFLOW_FILES" | while read -r file; do
-    filename=$(basename "$file")
-    echo -e "${YELLOW}コピー:${NC} $filename"
-    cp "$file" "$TARGET_WORKFLOW_DIR/$filename"
+echo "$AGENT_FILES" | while read -r file; do
+    rel_path="${file#$AGENTS_SOURCE/}"
+    target_file="$TARGET_AGENTS_DIR/$rel_path"
+    target_dir="$(dirname "$target_file")"
+    mkdir -p "$target_dir"
+    echo -e "${YELLOW}コピー:${NC} $rel_path"
+    cp "$file" "$target_file"
 done
 
 # ターゲットリポジトリでコミット
@@ -103,8 +107,8 @@ if [ -n "$(git status --porcelain)" ]; then
     git config user.name "Claude Code"
     git config user.email "noreply@anthropic.com"
 
-    git add .github/workflows/
-    git commit -m "🤖 ci(sync): sync workflows from claude-glm-actions-lab
+    git add .claude/agents/
+    git commit -m "🤖 chore(agents): sync agents from claude-glm-actions-lab
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
 
@@ -112,7 +116,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
     echo "変更をプッシュ中..."
     git push origin main 2>/dev/null || git push origin HEAD
 
-    echo -e "${GREEN}✓ ワークフローを同期しました${NC}"
+    echo -e "${GREEN}✓ エージェントを同期しました${NC}"
 else
     echo -e "${YELLOW}同期する変更はありませんでした${NC}"
 fi
