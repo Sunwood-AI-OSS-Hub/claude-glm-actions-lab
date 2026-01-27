@@ -84,7 +84,7 @@ fi
 TARGET_WORKFLOW_DIR="$TARGET_DIR/.github/workflows"
 mkdir -p "$TARGET_WORKFLOW_DIR"
 
-# ワークフローファイルをコピー
+# ワークフローファイルをコピー（追加・上書きのみ）
 echo ""
 echo "ワークフローファイルをコピー中..."
 
