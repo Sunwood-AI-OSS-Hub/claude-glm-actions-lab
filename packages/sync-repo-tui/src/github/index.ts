@@ -2,4 +2,4 @@
  * GitHub APIラッパー
  */
 
-export * from './repo-list';
+export * from './repo-list.js';
