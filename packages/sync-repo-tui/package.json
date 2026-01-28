@@ -2,7 +2,8 @@
   "name": "@sunwood-ai-labs/sync-repo-tui",
   "version": "1.0.0",
   "description": "GitHub repository synchronization TUI tool - WorkflowsとAgentsをターゲットリポジトリに同期",
-  "main": "dist/index.js",
+  "type": "module",
+  "main": "src/index.tsx",
   "bin": {
     "sync-repo-tui": "./bin/sync-repo-tui"
   },
@@ -24,12 +25,18 @@
   "author": "Sunwood AI Labs",
   "license": "MIT",
   "dependencies": {
-    "terminal-kit": "^3.0.0",
+    "@types/blessed": "^0.1.27",
+    "@types/react": "^19.2.10",
+    "blessed": "^0.1.81",
+    "dotenv": "^16.0.0",
     "execa": "^8.0.0",
-    "dotenv": "^16.0.0"
+    "ink": "^6.6.0",
+    "react": "^19.2.4",
+    "terminal-kit": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.0.0"
   },
   "files": [
