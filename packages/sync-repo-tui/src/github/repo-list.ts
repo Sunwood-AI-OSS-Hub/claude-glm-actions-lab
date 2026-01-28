@@ -3,7 +3,7 @@
  */
 
 import { execa } from 'execa';
-import { GitHubError, AuthenticationError } from '../utils/error';
+import { GitHubError, AuthenticationError } from '../utils/error.js';
 
 export interface Repository {
   name: string;

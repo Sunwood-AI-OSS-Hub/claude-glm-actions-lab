@@ -98,9 +98,3 @@ LICENSE
 *.ico
 *.mp4
 *.mp3
-
-sandbox/
-
-**/node_modules/
-
-.git/
