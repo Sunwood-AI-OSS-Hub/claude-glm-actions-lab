@@ -13,14 +13,15 @@ A beautiful Terminal User Interface for syncing GitHub Actions Workflows and Cla
 
 ## 📖 Overview
 
-`@sunwood-ai-labs/sync-repo-tui` is a GitHub repository synchronization tool implemented with TypeScript and `terminal-kit`. It efficiently syncs GitHub Actions Workflows and Claude Agents configurations to a single repository or multiple repositories within an organization.
+`@sunwood-ai-labs/sync-repo-tui` is a GitHub repository synchronization tool implemented with TypeScript, React, and Ink. It efficiently syncs GitHub Actions Workflows and Claude Agents configurations to a single repository or multiple repositories within an organization.
 
 Just like organizing books in a library, this tool helps you beautifully organize your repository configurations. 🌸
 
 ## ✨ Features
 
 ### TUI Interface
-- Comfortable terminal UI powered by `terminal-kit`
+- Beautiful terminal UI powered by **Ink** (React for CLIs)
+- Component-based architecture with React
 - Intuitive menu system
 - Real-time progress feedback
 
@@ -172,21 +173,16 @@ packages/sync-repo-tui/
 ├── README.md
 ├── README_JA.md
 ├── bin/
-│   └── sync-repo-tui       # Entry point
+│   └── sync-repo-tui       # Entry point script
 └── src/
-    ├── index.ts            # Main entry point
+    ├── index.tsx           # Main entry point (React/Ink app)
     ├── cli.ts              # CLI argument parser
     ├── config/             # Configuration module
     │   ├── env.ts          # Environment variable loader
     │   ├── constants.ts    # Constant definitions
     │   └── index.ts        # Configuration management
-    ├── tui/                # TUI screen module
-    │   ├── index.ts        # TUI main
-    │   ├── main-menu.ts    # Main menu
-    │   ├── sync-options.ts # Sync options selection
-    │   ├── repo-selector.ts# Repository selector
-    │   ├── confirmation.ts # Confirmation screen
-    │   └── progress.ts     # Progress display
+    ├── tui/                # TUI module (React components)
+    │   └── index.tsx       # TUI main component
     ├── sync/               # Sync logic module
     │   ├── index.ts        # Sync main
     │   ├── workflows.ts    # Workflows sync

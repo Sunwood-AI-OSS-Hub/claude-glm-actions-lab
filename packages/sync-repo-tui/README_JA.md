@@ -13,14 +13,15 @@ Workflows と Agents をターゲットリポジトリに同期するための�
 
 ## 📖 概要
 
-`@sunwood-ai-labs/sync-repo-tui` は、TypeScript と `terminal-kit` で実装された GitHub リポジトリ同期ツールです。単一のリポジトリや、組織内の複数のリポジトリに対して、GitHub Actions Workflows や Claude Agents の設定を効率的に同期することができます。
+`@sunwood-ai-labs/sync-repo-tui` は、TypeScript、React、Ink で実装された GitHub リポジトリ同期ツールです。単一のリポジトリや、組織内の複数のリポジトリに対して、GitHub Actions Workflows や Claude Agents の設定を効率的に同期することができます。
 
 まるで図書館の本を整理するように、リポジトリの設定を美しく整えるお手伝いをします。🌸
 
 ## ✨ 機能
 
 ### TUI インターフェース
-- `terminal-kit` を使った快適なターミナル UI
+- **Ink**（CLIのためのReact）による美しいターミナル UI
+- Reactによるコンポーネントベースのアーキテクチャ
 - 直感的なメニューシステム
 - リアルタイムの進捗フィードバック
 
@@ -172,21 +173,16 @@ packages/sync-repo-tui/
 ├── README.md
 ├── README_JA.md
 ├── bin/
-│   └── sync-repo-tui       # エントリーポイント
+│   └── sync-repo-tui       # エントリーポイントスクリプト
 └── src/
-    ├── index.ts            # メインエントリーポイント
+    ├── index.tsx           # メインエントリーポイント (React/Ink アプリ)
     ├── cli.ts              # CLI 引数パーサー
     ├── config/             # 設定モジュール
     │   ├── env.ts          # 環境変数の読み込み
     │   ├── constants.ts    # 定数定義
     │   └── index.ts        # 設定管理
-    ├── tui/                # TUI 画面モジュール
-    │   ├── index.ts        # TUI メイン
-    │   ├── main-menu.ts    # メインメニュー
-    │   ├── sync-options.ts # 同期オプション選択
-    │   ├── repo-selector.ts# リポジトリ選択
-    │   ├── confirmation.ts # 確認画面
-    │   └── progress.ts     # 進捗表示
+    ├── tui/                # TUI モジュール (React コンポーネント)
+    │   └── index.tsx       # TUI メインコンポーネント
     ├── sync/               # 同期ロジックモジュール
     │   ├── index.ts        # 同期メイン
     │   ├── workflows.ts    # Workflows 同期
