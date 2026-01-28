@@ -9,228 +9,454 @@
 ## 日本語 / Japanese
 
 ### 概要
-本リリースでは、リポジトリ同期ツールの大幅な機能強化とモダナイゼーションを実施しました。最大の変更点は、blessedベースの旧TUIからReactとInkを使用したモダンなアーキテクチャへの移行です。また、GitHub Actionsワークフローの自動応答機能も追加しました。
+
+本リリースでは、リポジトリ同期ツールの大幅な機能強化とモダナイゼーションを実施しました。最大の変更点は、blessedベースの旧TUIから **ReactとInk**を使用したモダンなアーキテクチャへの移行です。また、PRオープン時に自動的にコメントを投稿するGitHub Actionsワークフローも追加しました。
 
 ### 📊 変更統計
-- **追加ファイル**: 45個
-- **追加コード**: +5,224行
-- **削除コード**: -256行
-- **マージ済みPR**: 5件 (#19, #21, #23, #25, #27)
+
+| 項目 | 数値 |
+|:-----|:-----|
+| 追加ファイル | 45個 |
+| 追加コード | +5,224行 |
+| 削除コード | -256行 |
+| マージ済みPR | 5件 (#19, #21, #23, #25, #27) |
 
 ---
 
-### ✨ 主な新機能
+## ✨ 新機能詳細
 
-#### 1. sync-repo-tuiパッケージの追加 (#25)
+### 1. sync-repo-tuiパッケージ (#25, #27)
+
 **TypeScript製TUIリポジトリ同期ツール**
 
-ReactとInkを使用したモダンなTUIツールキットを新規追加しました。
+ReactとInkを使用したモダンなTUIツールキットとして完全に書き直されました。
 
-**パッケージ構成:**
+#### パッケージ情報
+
+```json
+{
+  "name": "@sunwood-ai-labs/sync-repo-tui",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "sync-repo-tui": "./bin/sync-repo-tui"
+  }
+}
 ```
-@sunwood-ai-labs/sync-repo-tui@1.0.0
-├── src/
-│   ├── cli.ts           # CLIエントリーポイント
-│   ├── config/          # 設定管理 (env.ts, constants.ts)
-│   ├── github/          # GitHub APIラッパー
-│   ├── sync/            # 同期ロジック (agents.ts, git.ts, workflows.ts)
-│   ├── tui/             # Ink+React製TUI画面
-│   └── utils/           # ユーティリティ (logger.ts, error.ts, file.ts)
-├── bin/sync-repo-tui    # 実行可能バイナリ
-└── 約870行のTypeScriptコード
+
+#### アーキテクチャ
+
+**ステートベースのTUI設計 (#27)**
+
+`src/tui/index.tsx` に実装されたメインコントローラーは、Reactのステート管理を使用したモダンな設計になっています：
+
+```typescript
+// ステートタイプ
+type AppState =
+  | { type: 'loading' }
+  | { type: 'envCheck'; hasEnv: boolean }
+  | { type: 'githubCheck' }
+  | { type: 'modeSelect' }
+  | { type: 'repoConfirm'; mode: 'single' | 'org'; config: Config }
+  | { type: 'repoInput'; mode: 'single' | 'org'; config: Config }
+  | { type: 'orgRepoList'; config: Config; repos: string[] }
+  | { type: 'syncOptions'; config: Config; repos: string[] }
+  | { type: 'finalConfirm'; config: Config; repos: string[] }
+  | { type: 'syncing'; config: Config; repos: string[] }
+  | { type: 'done'; summary: any }
+  | { type: 'error'; message: string };
 ```
 
-**機能:**
-- 複数リポジトリのワークフロー同期
-- エージェント設定の同期
-- インタラクティブなターミナルUI
-- GitHub API認証対応
+#### モジュール構成
 
-#### 2. PR自動コメントワークフロー (#19)
+| モジュール | ファイル | 説明 |
+|:----------|:--------|:-----|
+| **CLI** | `cli.ts` | コマンドラインエントリーポイント |
+| **Config** | `config/` | 設定管理（env.ts, constants.ts, index.ts） |
+| **GitHub** | `github/` | GitHub API ラッパー（repo-list.ts） |
+| **Sync** | `sync/` | 同期ロジック（agents.ts, git.ts, workflows.ts） |
+| **TUI** | `tui/` | Ink+React製TUI画面（index.tsx, main-menu.ts, repo-selector.ts等） |
+| **Utils** | `utils/` | ユーティリティ（logger.ts, error.ts, file.ts） |
+
+#### 追加されたTUIコンポーネント (#27)
+
+- `tui/index.tsx` - メインコントローラー（ステート管理）
+- `tui/main-menu.tsx` - メインメニュー画面
+- `tui/repo-selector.tsx` - リポジトリ選択画面
+- `tui/sync-options.tsx` - 同期オプション設定画面
+- `tui/confirmation.tsx` - 確認画面
+- `tui/progress.tsx` - 進捗表示画面
+
+---
+
+### 2. PR自動コメントワークフロー (#19)
+
 **PRオープン時の自動応答システム**
 
-GitHub Actionsワークフローを追加し、PR作成時に自動的にコメントを投稿する機能を実装しました。
+PRが作成されると自動的にコメントを投稿するGitHub Actionsワークフローを追加しました。
 
-**追加ファイル:**
-- `.github/workflows/pr-auto-comment.yml`
+#### 実装内容
 
-**機能:**
-- PRオープン時の自動応答トリガー
-- スイッチ機能によるオン/オフ制御
-- 権限設定の改善
+`.github/workflows/pr-auto-comment.yml`:
 
-#### 3. エージェント同期スクリプト (#23)
-**エージェント設定の自動同期**
+```yaml
+on:
+  pull_request:
+    types: [opened]
 
-Claude Codeのエージェント設定を複数リポジトリ間で同期するスクリプトを追加しました。
+permissions:
+  contents: read
+  pull-requests: write
 
-**追加ファイル:**
-- `scripts/sync-agents.sh`
-- `scripts/sync-repo-tui.sh`
-- `scripts/install-sync-repo-tui.sh`
+env:
+  ENABLE_PR_AUTO_COMMENT: ${{ vars.ENABLE_PR_AUTO_COMMENT || 'true' }}
+  TEMPLATE_SOURCE: ${{ vars.TEMPLATE_SOURCE || 'remote' }}
+  TEMPLATE_URL: ${{ vars.TEMPLATE_URL || '...' }}
+```
 
----
+#### 機能
 
-### ♻️ リファクタリング
-
-#### TUIをInk+Reactに移行 (#27)
-**モダンなUIアーキテクチャへの刷新**
-
-- **移行前**: blessed（Node.js用TUIライブラリ）
-- **移行後**: Ink + React（ReactコンポーネントでTUIを構築）
-
-**変更されたモジュール:**
-- `config/` - ES Modules対応
-- `github/` - ES Modules対応
-- `sync/` - ES Modules対応
-- `tui/` - Reactコンポーネント化
-
-**メリット:**
-- コンポーネントベースの再利用可能なUI
-- Reactエコシステムの活用
-- 型安全性の向上
-- テスト容易性の向上
+- **自動トリガー**: PRオープン時に自動実行
+- **スイッチ機能**: `ENABLE_PR_AUTO_COMMENT` 変数でオン/オフ制御
+- **テンプレート選択**: リモートURLまたはローカルファイルからテンプレートを読み込み
+- **権限設定**: 必要最小限の権限のみ付与
 
 ---
 
-### 🔧 バグ修正
+### 3. エージェント同期スクリプト (#23, #21)
 
-- **sync-repo.sh**: 重複コードとcase文のバグを修正 (#23)
-- **sync-repo-tui**: 変数名の重複と論理エラーを修正 (#25)
-- **依存関係**: 不要な型定義ファイルを削除 (#27)
+**Claude Codeエージェント設定の自動同期**
+
+#### 追加されたスクリプト
+
+| スクリプト | 説明 |
+|:----------|:-----|
+| `scripts/sync-agents.sh` | エージェント設定（.claude/agents/）を複数リポジトリに同期 |
+| `scripts/sync-repo-tui.sh` | sync-repo-tuiバイナリのラッパー |
+| `scripts/install-sync-repo-tui.sh` | sync-repo-tuiのインストーラー |
+| `scripts/sync-repo.sh` | 既存スクリプトの機能拡張（バグ修正含む） |
+
+#### 追加されたエージェント定義 (#21)
+
+`.claude/agents/` ディレクトリに3つのエージェント設定を追加：
+
+- `implementer.md` - 実装担当エージェント（美咲先輩）
+- `reviewer.md` - レビュー担当エージェント（玲子姐さん）
+- `doc-translator.md` - ドキュメント翻訳担当エージェント（琴音）
 
 ---
 
-### 🧹 クリーンアップ (#21)
+## ♻️ リファクタリング詳細
 
-**削除されたファイル:**
-- `.github/scripts/create-pr.py` - 使用されていないPR作成スクリプト
-- `.github/workflows/disabled/MINIMAL.yml` - 無効化されたワークフロー
+### TUIをInk+Reactに移行 (#27)
 
-**更新されたファイル:**
-- `.gitignore` - SourceSageアセットを追加
-- `.SourceSageignore` - sandboxとnode_modulesを追加
+**移行前（blessed）→ 移行後（Ink+React）**
+
+#### 変更点
+
+1. **すべてのモジュールをES Modulesに移行**
+   - `config/` モジュール
+   - `github/` モジュール
+   - `sync/` モジュール
+
+2. **TypeScript設定の更新**
+   ```json
+   {
+     "compilerOptions": {
+       "module": "ES2022",
+       "moduleResolution": "bundler",
+       "jsx": "react",
+       "jsxFactory": "React.createElement"
+     }
+   }
+   ```
+
+3. **実行方法の変更**
+   - **移行前**: Node.jsでコンパイル済みJSを実行
+   - **移行後**: `tsx` でTSXを直接実行
+
+#### メリット
+
+- **コンポーネントベース**: ReactコンポーネントとしてUIを構築可能
+- **型安全性**: TypeScript + Reactで型安全なUI開発
+- **テスト容易性**: React Testing Library等のテストツールが活用可能
+- **エコシステム**: npmのReactエコシステムを活用可能
 
 ---
 
-### 📝 ドキュメント更新
+## 🔧 バグ修正
 
-- **README**: Ink+React移行に合わせて更新 (#27)
-- **sync-repo-tui/README.md**: 日本語・英語の両言語でドキュメント作成 (#25)
+### sync-repo.shのバグ修正 (#23)
+
+- 重複コードの削除
+- case文の論理エラーを修正
+
+### sync-repo-tuiのバグ修正 (#25, #27)
+
+- 変数名の重複を修正
+- 論理エラーを修正
+- 不要な型定義ファイルを削除
+
+---
+
+## 🧹 クリーンアップ (#21)
+
+### 削除されたファイル
+
+| ファイル | 理由 |
+|:--------|:-----|
+| `.github/scripts/create-pr.py` | 使用されていないPR作成スクリプト |
+| `.github/workflows/disabled/MINIMAL.yml` | 無効化されたワークフロー |
+
+### 更新されたファイル
+
+| ファイル | 変更内容 |
+|:--------|:---------|
+| `.gitignore` | SourceSageアセットを追加 |
+| `.SourceSageignore` | sandboxとnode_modulesを追加 |
+| `.claude/rules/implementer.md` | nameフィールドを簡素化 |
+| `.claude/rules/reviewer.md` | 記述を修正・整理 |
+
+---
+
+## 📝 ドキュメント更新
+
+### README更新 (#27)
+
+Ink+React移行に合わせてREADMEを更新。
+
+### sync-repo-tuiドキュメント作成 (#25)
+
+日本語と英語の両言語でREADMEを作成：
+- `packages/sync-repo-tui/README.md`
+- `packages/sync-repo-tui/README_JA.md`
 
 ---
 
 ## English
 
 ### Overview
-This release includes significant enhancements and modernization of the repository synchronization tools. The major change is the migration from the blessed-based TUI to a modern architecture using React and Ink. We also added an automatic response feature for GitHub Actions workflows.
+
+This release includes significant enhancements and modernization of the repository synchronization tools. The major change is the migration from the blessed-based TUI to a modern architecture using **React and Ink**. We also added a GitHub Actions workflow that automatically posts comments when PRs are created.
 
 ### 📊 Change Statistics
-- **Files Added**: 45
-- **Lines Added**: +5,224
-- **Lines Removed**: -256
-- **Merged PRs**: 5 (#19, #21, #23, #25, #27)
+
+| Item | Count |
+|:-----|:------|
+| Files Added | 45 |
+| Lines Added | +5,224 |
+| Lines Removed | -256 |
+| Merged PRs | 5 (#19, #21, #23, #25, #27) |
 
 ---
 
-### ✨ What's New
+## ✨ What's New Details
 
-#### 1. sync-repo-tui Package (#25)
+### 1. sync-repo-tui Package (#25, #27)
+
 **TypeScript-based TUI Repository Synchronization Tool**
 
-Added a modern TUI toolkit built with React and Ink.
+Completely rewritten as a modern TUI toolkit built with React and Ink.
 
-**Package Structure:**
+#### Package Information
+
+```json
+{
+  "name": "@sunwood-ai-labs/sync-repo-tui",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "sync-repo-tui": "./bin/sync-repo-tui"
+  }
+}
 ```
-@sunwood-ai-labs/sync-repo-tui@1.0.0
-├── src/
-│   ├── cli.ts           # CLI entry point
-│   ├── config/          # Configuration management
-│   ├── github/          # GitHub API wrapper
-│   ├── sync/            # Sync logic (agents, git, workflows)
-│   ├── tui/             # Ink+React TUI screens
-│   └── utils/           # Utilities (logger, error, file)
-├── bin/sync-repo-tui    # Executable binary
-└── ~870 lines of TypeScript
+
+#### Architecture
+
+**State-based TUI Design (#27)**
+
+The main controller implemented in `src/tui/index.tsx` uses modern React state management:
+
+```typescript
+// State types
+type AppState =
+  | { type: 'loading' }
+  | { type: 'envCheck'; hasEnv: boolean }
+  | { type: 'githubCheck' }
+  | { type: 'modeSelect' }
+  | { type: 'repoConfirm'; mode: 'single' | 'org'; config: Config }
+  | { type: 'repoInput'; mode: 'single' | 'org'; config: Config }
+  | { type: 'orgRepoList'; config: Config; repos: string[] }
+  | { type: 'syncOptions'; config: Config; repos: string[] }
+  | { type: 'finalConfirm'; config: Config; repos: string[] }
+  | { type: 'syncing'; config: Config; repos: string[] }
+  | { type: 'done'; summary: any }
+  | { type: 'error'; message: string };
 ```
 
-**Features:**
-- Multi-repository workflow synchronization
-- Agent configuration synchronization
-- Interactive terminal UI
-- GitHub API authentication support
+#### Module Structure
 
-#### 2. PR Auto-Comment Workflow (#19)
+| Module | Files | Description |
+|:-------|:------|:------------|
+| **CLI** | `cli.ts` | Command-line entry point |
+| **Config** | `config/` | Configuration management |
+| **GitHub** | `github/` | GitHub API wrapper |
+| **Sync** | `sync/` | Sync logic (agents, git, workflows) |
+| **TUI** | `tui/` | Ink+React TUI screens |
+| **Utils** | `utils/` | Utilities (logger, error, file) |
+
+#### Added TUI Components (#27)
+
+- `tui/index.tsx` - Main controller (state management)
+- `tui/main-menu.tsx` - Main menu screen
+- `tui/repo-selector.tsx` - Repository selection screen
+- `tui/sync-options.tsx` - Sync options configuration screen
+- `tui/confirmation.tsx` - Confirmation screen
+- `tui/progress.tsx` - Progress display screen
+
+---
+
+### 2. PR Auto-Comment Workflow (#19)
+
 **Automatic Response System for PRs**
 
 Added a GitHub Actions workflow that automatically posts comments when PRs are created.
 
-**Added Files:**
-- `.github/workflows/pr-auto-comment.yml`
+#### Implementation
 
-**Features:**
-- Automatic response trigger on PR open
-- On/off control via switch feature
-- Improved permission settings
+`.github/workflows/pr-auto-comment.yml`:
 
-#### 3. Agent Sync Scripts (#23)
-**Automated Agent Configuration Synchronization**
+```yaml
+on:
+  pull_request:
+    types: [opened]
 
-Added scripts to synchronize Claude Code agent configurations across multiple repositories.
+permissions:
+  contents: read
+  pull-requests: write
 
-**Added Files:**
-- `scripts/sync-agents.sh`
-- `scripts/sync-repo-tui.sh`
-- `scripts/install-sync-repo-tui.sh`
+env:
+  ENABLE_PR_AUTO_COMMENT: ${{ vars.ENABLE_PR_AUTO_COMMENT || 'true' }}
+  TEMPLATE_SOURCE: ${{ vars.TEMPLATE_SOURCE || 'remote' }}
+  TEMPLATE_URL: ${{ vars.TEMPLATE_URL || '...' }}
+```
 
----
+#### Features
 
-### ♻️ Refactoring
-
-#### TUI Migration to Ink+React (#27)
-**Modern UI Architecture Refresh**
-
-- **Before**: blessed (Node.js TUI library)
-- **After**: Ink + React (Building TUI with React components)
-
-**Migrated Modules:**
-- `config/` - ES Modules support
-- `github/` - ES Modules support
-- `sync/` - ES Modules support
-- `tui/` - React componentization
-
-**Benefits:**
-- Component-based reusable UI
-- React ecosystem utilization
-- Improved type safety
-- Better testability
+- **Auto Trigger**: Automatically runs on PR open
+- **Switch Feature**: On/off control via `ENABLE_PR_AUTO_COMMENT` variable
+- **Template Selection**: Load templates from remote URL or local file
+- **Permission Settings**: Minimal required permissions only
 
 ---
 
-### 🔧 Bug Fixes
+### 3. Agent Sync Scripts (#23, #21)
 
-- **sync-repo.sh**: Fixed duplicate code and case statement bugs (#23)
-- **sync-repo-tui**: Fixed duplicate variable names and logic errors (#25)
-- **Dependencies**: Removed unnecessary type definition files (#27)
+**Automated Claude Code Agent Configuration Synchronization**
+
+#### Added Scripts
+
+| Script | Description |
+|:-------|:------------|
+| `scripts/sync-agents.sh` | Sync agent configs (.claude/agents/) to multiple repos |
+| `scripts/sync-repo-tui.sh` | sync-repo-tui binary wrapper |
+| `scripts/install-sync-repo-tui.sh` | sync-repo-tui installer |
+| `scripts/sync-repo.sh` | Enhanced existing script (includes bug fixes) |
+
+#### Added Agent Definitions (#21)
+
+Added 3 agent configurations in `.claude/agents/`:
+
+- `implementer.md` - Implementation agent (Misaki-senpai)
+- `reviewer.md` - Review agent (Reiko-nee-san)
+- `doc-translator.md` - Documentation translation agent (Kotone)
 
 ---
 
-### 🧹 Cleanup (#21)
+## ♻️ Refactoring Details
 
-**Removed Files:**
-- `.github/scripts/create-pr.py` - Unused PR creation script
-- `.github/workflows/disabled/MINIMAL.yml` - Disabled workflow
+### TUI Migration to Ink+React (#27)
 
-**Updated Files:**
-- `.gitignore` - Added SourceSage assets
-- `.SourceSageignore` - Added sandbox and node_modules
+**Before (blessed) → After (Ink+React)**
+
+#### Changes
+
+1. **Migrated all modules to ES Modules**
+   - `config/` module
+   - `github/` module
+   - `sync/` module
+
+2. **Updated TypeScript configuration**
+   ```json
+   {
+     "compilerOptions": {
+       "module": "ES2022",
+       "moduleResolution": "bundler",
+       "jsx": "react",
+       "jsxFactory": "React.createElement"
+     }
+   }
+   ```
+
+3. **Changed execution method**
+   - **Before**: Run compiled JS with Node.js
+   - **After**: Run TSX directly with `tsx`
+
+#### Benefits
+
+- **Component-based**: Build UI as React components
+- **Type Safety**: Type-safe UI development with TypeScript + React
+- **Testability**: Can use React Testing Library and other testing tools
+- **Ecosystem**: Leverage npm's React ecosystem
 
 ---
 
-### 📝 Documentation Updates
+## 🔧 Bug Fixes
 
-- **README**: Updated for Ink+React migration (#27)
-- **sync-repo-tui/README.md**: Created bilingual documentation (Japanese/English) (#25)
+### sync-repo.sh Bug Fixes (#23)
+
+- Removed duplicate code
+- Fixed case statement logic errors
+
+### sync-repo-tui Bug Fixes (#25, #27)
+
+- Fixed duplicate variable names
+- Fixed logic errors
+- Removed unnecessary type definition files
+
+---
+
+## 🧹 Cleanup (#21)
+
+### Removed Files
+
+| File | Reason |
+|:-----|:-------|
+| `.github/scripts/create-pr.py` | Unused PR creation script |
+| `.github/workflows/disabled/MINIMAL.yml` | Disabled workflow |
+
+### Updated Files
+
+| File | Changes |
+|:-----|:--------|
+| `.gitignore` | Added SourceSage assets |
+| `.SourceSageignore` | Added sandbox and node_modules |
+| `.claude/rules/implementer.md` | Simplified name field |
+| `.claude/rules/reviewer.md` | Fixed and organized descriptions |
+
+---
+
+## 📝 Documentation Updates
+
+### README Update (#27)
+
+Updated README for Ink+React migration.
+
+### sync-repo-tui Documentation (#25)
+
+Created bilingual README (Japanese and English):
+- `packages/sync-repo-tui/README.md`
+- `packages/sync-repo-tui/README_JA.md`
 
 ---
 
@@ -238,11 +464,11 @@ Added scripts to synchronize Claude Code agent configurations across multiple re
 
 | PR | Title | Description |
 |:---|:------|:------------|
-| #27 | ♻️ refactor(sync-repo-tui): TUIをInk+Reactに移行 | Migrated TUI from blessed to Ink+React |
-| #25 | ✨ feat(packages): sync-repo-tui パッケージ追加 | Added TypeScript TUI sync tool package |
-| #23 | ✨ feat(scripts): TUI化とエージェント同期機能追加 | Added TUI wrapper and agent sync scripts |
-| #21 | 🔧 chore: 使用していないスクリプトを削除 | Removed unused scripts and workflows |
-| #19 | ✨ feat(workflow): PR自動応答トリガー追加 | Added PR auto-comment workflow |
+| #27 | ♻️ refactor(sync-repo-tui): TUIをInk+Reactに移行 | Migrated TUI from blessed to Ink+React with state-based design |
+| #25 | ✨ feat(packages): sync-repo-tui パッケージ追加 | Added TypeScript TUI sync tool package with full module structure |
+| #23 | ✨ feat(scripts): TUI化とエージェント同期機能追加 | Added TUI wrapper, agent sync scripts, and enhanced sync-repo.sh |
+| #21 | 🔧 chore: 使用していないスクリプトを削除 | Added agent definitions, removed unused scripts and workflows |
+| #19 | ✨ feat(workflow): PR自動応答トリガー追加 | Added PR auto-comment workflow with template support |
 
 ---
 
